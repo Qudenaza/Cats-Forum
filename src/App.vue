@@ -26,64 +26,42 @@ export default {
       this.filterText = data.text;
     }
   },
-  created() {
+  mounted() {
     const self = this;
 
-    function getUserNames(callback) {
-      fetch("https://jsonplaceholder.typicode.com/users")
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
+    async function getData() {
+      // Получаем имена пользователей
+      const userNames = await fetch(
+        "https://jsonplaceholder.typicode.com/users"
+      ).then(res => res.json());
 
-          throw new Error("Не получилось получить пользователей");
-        })
-        .then(users => {
-          callback(users);
-        })
-        .catch(error => {
-          console.log(error);
-        });
+      // Получаем заголовк поста, и его содержание
+      const userPosts = await fetch(
+        "https://jsonplaceholder.typicode.com/posts?_limit=20"
+      ).then(res => res.json());
+
+      // Присваеваем данные полученные с сервера в наш массив posts
+      self.posts = userPosts;
+
+      // Вспомогательная переменная счетчик
+      let i = 0;
+
+      // В каждый из обьектов поста добавляем имя полученное с сервера
+      self.posts.map(post => {
+        post["name"] = userNames[i++].name;
+
+        if (i >= 10) i = 0;
+      });
     }
 
-    function getPosts(users) {
-      fetch("https://jsonplaceholder.typicode.com/posts")
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-
-          throw new Error("Не получилось получить посты");
-        })
-        .then(content => {
-          let i = 0;
-
-          content.forEach(post => {
-            if (self.posts.length > 20) return;
-
-            self.posts.push({
-              id: post.id,
-              name: users[i++].name,
-              title: post.title,
-              text: post.body
-            });
-
-            if (i >= 10) i = 0;
-          });
-        })
-        .catch(error => {
-          console.log(error);
-        });
-    }
-
-    getUserNames(getPosts);
+    getData();
   },
   computed: {
     filteredPosts() {
       return this.posts.filter(post => {
         return (
           post.name.includes(this.filterName) &&
-          post.text.includes(this.filterText)
+          post.body.includes(this.filterText)
         );
       });
     }

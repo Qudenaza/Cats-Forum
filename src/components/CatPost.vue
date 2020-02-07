@@ -8,22 +8,26 @@
         <h2 class="post__name">{{post.name}}</h2>
         <p class="post__title">{{post.title}}</p>
       </div>
-      <p class="post__text">{{post.text}}</p>
+      <p class="post__text">{{post.body}}</p>
       <footer class="post__footer">
         <button class="post__button" @click="showComments" v-if="showOpenButton">Открыть комментарии</button>
       </footer>
     </div>
-    <transition name="slide">
-      <div class="post__comments" v-show="showCommentsSection">
-        <cat-post-comment v-for="comment in comments" :key="comment.id" :comment="comment" />
-        <button class="post__button post__button--close" @click="hideComments">Скрыть комментарии</button>
-      </div>
-    </transition>
+    <div class="post__comments" v-if="showCommentsSection">
+      <preloader v-if="!comments.length" />
+      <cat-post-comment v-for="comment in comments" :key="comment.id" :comment="comment" />
+      <button
+        class="post__button post__button--close"
+        @click="hideComments"
+        v-show="comments.length"
+      >Скрыть комментарии</button>
+    </div>
   </section>
 </template>
 
 <script>
 import CatPostComment from "./CatPostComment.vue";
+import Preloader from "./Preloader.vue";
 
 export default {
   data() {
@@ -51,8 +55,6 @@ export default {
         .catch(error => {
           console.log(error);
         });
-
-      this.showPreloader = false;
     },
     showComments() {
       if (!this.comments.length) this.getComments();
@@ -67,7 +69,8 @@ export default {
   },
   props: ["post"],
   components: {
-    CatPostComment
+    CatPostComment,
+    Preloader
   }
 };
 </script>
@@ -166,13 +169,5 @@ export default {
       color: darken(#2892ff, 60%);
     }
   }
-}
-
-.slide-enter-active {
-  transition: all 0.3s ease;
-}
-
-.slide-enter {
-  transform: translateY(-100%);
 }
 </style>
